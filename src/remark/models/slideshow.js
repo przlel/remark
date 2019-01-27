@@ -23,6 +23,7 @@ function Slideshow (events, dom, options, callback) {
 
   self.loadFromString = loadFromString;
   self.loadFromUrl = loadFromUrl;
+  self.loadRawFromUrl = loadRawFromUrl;
   self.update = update;
   self.getLinks = getLinks;
   self.getSlides = getSlides;
@@ -111,7 +112,18 @@ function Slideshow (events, dom, options, callback) {
     return xhr;
   }
 
-  function update () {
+  function loadRawFromUrl(url) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url, false);  // `false` makes the request synchronous
+    request.send(null);
+    if (request.status === 200) {
+      return request.responseText;
+    }
+    console.warn("Cannot load resource: " + url)
+    return undefined;
+  }
+
+  function update() {
     events.emit('resize');
   }
 
@@ -201,6 +213,21 @@ function createSlides (slideshowSource, options) {
     else if (layoutSlide && slide.properties.layout !== 'true') {
       template = layoutSlide;
     }
+    if (slide.properties.include !== undefined) {
+      var loadedTemplate = self.slideshow.loadRawFromUrl(slide.properties.include);
+      if (loadedTemplate !== undefined) {
+        var parsedTemplate = createSlides(loadedTemplate, options);
+        var templateContent = parsedTemplate.shift();
+        if (templateContent !== undefined) {
+          slide.properties = Object.assign(slide.properties, templateContent.properties);
+          slide.content[0] = templateContent.content[0];
+          slide.notes = templateContent.notes;
+        }
+      } else {
+        console.warn("Cannot include slide: " + slide.properties.include);
+      }
+    }
+
 
     if (slide.properties.continued === 'true' &&
         options.countIncrementalSlides === false &&
