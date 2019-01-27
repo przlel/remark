@@ -89,9 +89,9 @@ function Slideshow (events, dom, options, callback) {
     events.emit('slidesChanged');
   }
 
-  function loadFromUrl (url, callback) {
+  function loadFromUrl(url, callback) {
     var xhr = new dom.XMLHttpRequest();
-    xhr.open('GET', options.sourceUrl, true);
+    xhr.open('GET', url, true);
     xhr.onload = function (e) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
